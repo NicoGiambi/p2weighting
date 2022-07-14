@@ -20,6 +20,8 @@ from tqdm import tqdm
 from os import listdir
 from os.path import isfile, join
 
+os.environ['TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD'] = '10418737240 bytes'
+
 INCEPTION_V3_URL = "https://openaipublic.blob.core.windows.net/diffusion/jul-2021/ref_batches/classify_image_graph_def.pb"
 INCEPTION_V3_PATH = "classify_image_graph_def.pb"
 
@@ -51,15 +53,18 @@ def main():
 
     # x is a list of file locations for all images
     arr = []
-    arr2 = []
+    print(len(x))
+    np_image = np.zeros((len(x), 256, 256, 3), dtype=np.uint8)
+    img = np.zeros((256, 256, 3))
+
     for i in tqdm(range(len(x))):
-        img = np.array(Image.open(x[i]))
+        img = np.array(Image.open(x[i])).astype(np.uint8)
+        np_image[i] = img
         # append array to list
-        arr.append(img)
         if i in s_list:
-            arr2.append(img)
-    X_array = np.asarray(arr)
-    np.savez(dataset_path, X_array)
+            arr.append(img)
+
+    np.savez(dataset_path, np_image)
 
     print("computing reference batch activations...")
     ref_acts = evaluator.read_activations(dataset_path)
@@ -73,10 +78,9 @@ def main():
     print(ref_stats_spatial.mu.shape)
     print(ref_stats_spatial.sigma.shape)
 
-    X_array2 = np.asarray(arr2)
+    X_array2 = np.asarray(arr).astype(uint8)
     np.savez(f'{args.dataset_path}_stats.npz', arr_0=X_array2, mu=ref_stats.mu, sigma=ref_stats.sigma,
              mu_s=ref_stats_spatial.mu, sigma_s=ref_stats_spatial.sigma)
-
 
 
 class InvalidFIDException(Exception):
