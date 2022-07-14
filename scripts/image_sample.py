@@ -11,6 +11,10 @@ import numpy as np
 import torch as th
 import torch.distributed as dist
 
+import sys
+sys.path.append("/content/p2weighting/")
+sys.path.append("/content/p2weighting/guided_diffusion")
+
 from guided_diffusion import dist_util, logger
 from guided_diffusion.script_util import (
     NUM_CLASSES,
